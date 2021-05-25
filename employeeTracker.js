@@ -2,9 +2,6 @@ const mysql = require('mysql');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 
-const mysql = require('mysql');
-const inquirer = require('inquirer');
-
 // create the connection information for the sql database
 const connection = mysql.createConnection({
   host: 'localhost',
@@ -17,6 +14,34 @@ const connection = mysql.createConnection({
 
   // Your password
   password: '12345',
-  database: '',
+  database: 'seed',
 });
 
+connection.connect((err) => {
+  if (err) throw err;
+  SelectTask();
+});
+
+const SelectTask = () => {
+  inquirer
+    .prompt({
+      name: 'action',
+      type: 'rawlist',
+      message: 'What would you like to do?',
+      choices: [
+        'View All Employees',
+        'View All Employees By Department',
+        'View All Employees By Manager',
+        'Add New Employee',
+        'Remove Employee',
+        'Update Employee Role',
+        'Update Employee Manager',
+        'View All Roles',
+        'Add New Role',
+        'Remove Role',
+        'View All Departments',
+        'Add New Department',
+        'Remove Department',
+        'View Total Utilized Budget of Department',
+    })
+}
