@@ -43,5 +43,69 @@ const SelectTask = () => {
         'Add New Department',
         'Remove Department',
         'View Total Utilized Budget of Department',
+      ],
     })
+    .then((answer) => {
+      switch (answer.action) {
+        case "View All Employees":
+          viewEmployees();
+          break;
+
+        case "View All Employees By Department":
+          employeeByDepartment();
+          break;
+
+        case "View All Employees By Manager":
+          employeesByManager();
+          break;
+
+        case "Add New Employee":
+          addEmployee();
+          break;
+
+        case "Remove Employee":
+          removeEmployee();
+          break;
+
+        case "Update Employee Role":
+          updateRole();
+          break;
+
+        case "Update Employee Manager":
+          updateManager();
+          break;
+
+        case "View All Roles":
+          viewRoles();
+          break;
+
+        case "Add New Role":
+          addRole();
+          break;
+
+        case "Remove Role":
+          removeRole();
+          break;
+
+        case "View All Departments":
+          viewDepartments();
+          break;
+
+        case "Add New Department":
+          addDepartment();
+          break;
+
+        case "Remove Department":
+          removeDepartment();
+          break;
+
+        case "View Total Utilized Budget of Department":
+          departmentBudget();
+          break;
+
+        default:
+          console.log(`Invalid action: ${answer.action}`);
+          break;
+      }
+    });
 }
