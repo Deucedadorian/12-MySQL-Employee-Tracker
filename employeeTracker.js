@@ -1,20 +1,16 @@
 const mysql = require('mysql');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
+// const { viewEmployees } = require("./lib/Employee");
 
-// create the connection information for the sql database
 const connection = mysql.createConnection({
   host: 'localhost',
 
-  // Your port; if not 3306
   port: 3306,
-
-  // Your username
+  
   user: 'root',
-
-  // Your password
   password: '12345',
-  database: 'seed',
+  database: 'businessDB',
 });
 
 connection.connect((err) => {
@@ -26,7 +22,7 @@ const SelectTask = () => {
   inquirer
     .prompt({
       name: 'action',
-      type: 'rawlist',
+      type: 'list',
       message: 'What would you like to do?',
       choices: [
         'View All Employees',
@@ -108,4 +104,30 @@ const SelectTask = () => {
           break;
       }
     });
-}
+};
+
+const viewEmployees = () => {
+  const query = `
+  SELECT 
+	e.id, 
+    e.first_name, 
+    e.last_name, 
+    title, 
+	d.name AS department,
+	salary,
+    m.first_name AS manager
+FROM employees e
+JOIN roles r 
+	ON e.role_id = r.id
+LEFT JOIN employees m
+	ON e.manager_id = m.id
+JOIN departments d
+	ON r.id = d.id
+ORDER BY e.id`;
+  connection.query(query, (err, res) => {
+    console.table(res);
+    SelectTask();
+  });
+};
+
+module.exports = connection;
