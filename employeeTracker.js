@@ -129,9 +129,13 @@ let SelectTask = () => {
 //   });
 // };
 
-let addEmployee = () => {
+let addEmployee = async () => {
+  let roles = await getRole();
+  let managers = await getManager();
+  console.log(roles);
+  console.log(managers);
   // maybe here is the only place for a query.. So Ill have to make the right one.
-  inquirer
+   inquirer
   .prompt([
     {
       name: "firstName",
@@ -147,29 +151,12 @@ let addEmployee = () => {
       name: "role",
       type: "list",
       message: "Enter the employee's role:",
-      choices: getRole(),
+      choices: roles,
     },
     {
       name: "manager",
       type: "list",
-      choices() {
-        connection.query(
-          `SELECT
-            first_name,
-            last_name
-          FROM employees
-          WHERE role_id = 3`, 
-          (err, res) => {
-            if (err) throw err;
-            const choiceArray = [];
-            res.forEach(({ first_name, last_name }) => {
-              // Maybe here filter out repeats..
-              choiceArray.push(first_name + " " + last_name);
-            });
-            return choiceArray;
-          }
-        );
-      },
+      choices: managers,
     },
   ])
   .then((answers) => {
@@ -189,7 +176,7 @@ let addEmployee = () => {
   })
 };
 
-const getRoleId = () => {
+let getRoleId = () => {
   connection.query('SELECT id FROM roles WHERE ?', 
     {
       title: answers.role,
@@ -222,8 +209,8 @@ let managerId = () => {
   );
 };
 
-let getRole = () => {
-  connection.query(
+let getRole = async () => {
+  await connection.query(
     `SELECT
       title
     FROM roles`, 
@@ -235,5 +222,24 @@ let getRole = () => {
       });
       return choiceArray;
     },
+  );
+};
+
+let getManager = async () => {
+  await connection.query(
+    `SELECT
+      first_name,
+      last_name
+    FROM employees
+    WHERE role_id = 3`, 
+    (err, res) => {
+      if (err) throw err;
+      const choiceArray = [];
+      res.forEach(({ first_name, last_name }) => {
+        // Maybe here filter out repeats..
+        choiceArray.push(first_name + " " + last_name);
+      });
+      return choiceArray;
+    }
   );
 };
