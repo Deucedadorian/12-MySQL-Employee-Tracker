@@ -159,7 +159,7 @@ let addEmployee = async () => {
       choices: managers,
     },
   ])
-  .then((answers) => {
+  await ((answers) => {
     connection.query(
       "INSERT INTO employees SET ?",
       {
@@ -210,7 +210,7 @@ let managerId = () => {
 };
 
 let getRole = async () => {
-  await connection.query(
+  connection.query(
     `SELECT
       title
     FROM roles`, 
@@ -225,8 +225,8 @@ let getRole = async () => {
   );
 };
 
-let getManager = async () => {
-  await connection.query(
+let getManager = () => {
+  connection.query(
     `SELECT
       first_name,
       last_name
