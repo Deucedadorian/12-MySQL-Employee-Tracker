@@ -1,7 +1,8 @@
+const util = require('util');
 const mysql = require("mysql");
 const inquirer = require("inquirer");
 const cTable = require("console.table");
-// const { viewEmployees } = require("./lib/Employee");
+const { promisify } = require('util');
 
 const connection = mysql.createConnection({
   host: "localhost",
@@ -13,12 +14,14 @@ const connection = mysql.createConnection({
   database: "businessDB",
 });
 
+const queryAsync = util.promisify(connection.query).bind(connection);
+
 connection.connect((err) => {
   if (err) throw err;
   SelectTask();
 });
 
-let SelectTask = () => {
+let SelectTask = async () => {
   inquirer
     .prompt({
       name: "action",
@@ -129,117 +132,129 @@ let SelectTask = () => {
 //   });
 // };
 
-let addEmployee = async () => {
-  let roles = await getRole();
-  let managers = await getManager();
-  console.log(roles);
-  console.log(managers);
-  // maybe here is the only place for a query.. So Ill have to make the right one.
-   inquirer
-  .prompt([
-    {
-      name: "firstName",
-      type: "input",
-      message: "Enter the employee's first name:",
-    },
-    {
-      name: "lastName",
-      type: "input",
-      message: "Enter the employee's last name:",
-    },
-    {
-      name: "role",
-      type: "list",
-      message: "Enter the employee's role:",
-      choices: roles,
-    },
-    {
-      name: "manager",
-      type: "list",
-      choices: managers,
-    },
-  ])
-  await ((answers) => {
-    connection.query(
-      "INSERT INTO employees SET ?",
+const addEmployee = () => {
+  Promise.all([getRoles(), getManagers()])
+    .then(([ roles, managers ]) =>
+    // maybe here is the only place for a query.. So Ill have to make the right one.
+      inquirer
+    .prompt([
       {
-        first_name: answers.firstName,
-        last_name: answers.lastName,
-        role_id: getRoleId(),
-        manager_id: managerId()
+        name: "firstName",
+        type: "input",
+        message: "Enter the employee's first name:",
       },
-      (err) => {
-        if (err) throw err;
-        SelectTask();
-      }
-    );
-  })
+      {
+        name: "lastName",
+        type: "input",
+        message: "Enter the employee's last name:",
+      },
+      {
+        name: "role",
+        type: "list",
+        message: "Enter the employee's role:",
+        choices: roles,
+      },
+      {
+        name: "manager",
+        type: "list",
+        choices: managers,
+      },
+    ]))
+    .then((answers) => {
+      connection.query(
+        "INSERT INTO employees SET ?",
+        {
+          first_name: answers.firstName,
+          last_name: answers.lastName,
+          role_id: Number(answers.role),
+          manager_id: Number(answers.manager)
+        },
+        (err) => {
+          if (err) throw err;
+          SelectTask();
+        }
+      );
+    })
 };
 
-let getRoleId = () => {
-  connection.query('SELECT id FROM roles WHERE ?', 
-    {
-      title: answers.role,
-    },
-    (err, res) => {
-      if (err) throw err;
-      let roleId = [];
-      res.forEach(({ id }) => {
-        roleId.push(id);
-      });
-      return roleId; 
-    },
-  );
+// let getRoleId = () => {
+//   connection.query('SELECT id FROM roles WHERE ?', 
+//     {
+//       title: answers.role,
+//     },
+//     (err, res) => {
+//       if (err) throw err;
+//       let roleId = [];
+//       res.forEach(({ id }) => {
+//         roleId.push(id);
+//       });
+//       return roleId; 
+//     },
+//   );
+// };
+
+// let managerId = () => {
+//   let manager = answers.manager.split(' ');
+//   connection.query(
+//     'SELECT id FROM employees WHERE ?',
+//     {
+//       first_name: manager[0],
+//       last_name: manager[1],
+//     },
+//     (err, res) => {
+//       if (err) throw err;
+//       let managerId;
+//         managerId = res.id;
+//       return managerId;
+//     },
+//   );
+// };
+
+let getRoles = async () => {
+  // await connection.query(
+  //   `SELECT
+  //     title
+  //   FROM roles`, 
+  //   (err, res) => {
+  //       if (err) throw err;
+  //       console.log(res);
+  //       const choiceArray = [];
+  //     res.forEach(({ title }) => {
+  //       choiceArray.push(title);
+  //     });
+  //     console.log(choiceArray);
+  //     return choiceArray;
+  //   }
+  // );
+  try {
+    const rows = await queryAsync("SELECT * FROM roles");
+    return rows.map((role) => ({name: role.title, value: role.id}));
+  } catch (err) {
+      console.log(`Err at getRoles,`, err);
+  }
 };
 
-let managerId = () => {
-  let manager = answers.manager.split(' ');
-  connection.query(
-    'SELECT id FROM employees WHERE ?',
-    {
-      first_name: manager[0],
-      last_name: manager[1],
-    },
-    (err, res) => {
-      if (err) throw err;
-      let managerId;
-        managerId = res.id;
-      return managerId;
-    },
-  );
-};
-
-let getRole = async () => {
-  connection.query(
-    `SELECT
-      title
-    FROM roles`, 
-    (err, res) => {
-        if (err) throw err;
-      const choiceArray = [];
-      res.forEach(({ title }) => {
-        choiceArray.push(title);
-      });
-      return choiceArray;
-    },
-  );
-};
-
-let getManager = () => {
-  connection.query(
-    `SELECT
-      first_name,
-      last_name
-    FROM employees
-    WHERE role_id = 3`, 
-    (err, res) => {
-      if (err) throw err;
-      const choiceArray = [];
-      res.forEach(({ first_name, last_name }) => {
-        // Maybe here filter out repeats..
-        choiceArray.push(first_name + " " + last_name);
-      });
-      return choiceArray;
-    }
-  );
+let getManagers = async () => {
+  // connection.query(
+  //   `SELECT
+  //     first_name,
+  //     last_name
+  //   FROM employees
+  //   WHERE role_id = 3`, 
+  //   (err, res) => {
+  //     if (err) throw err;
+  //     const choiceArray = [];
+  //     res.forEach(({ first_name, last_name }) => {
+  //       // Maybe here filter out repeats..
+  //       choiceArray.push(first_name + " " + last_name);
+  //     });
+  //     return choiceArray;
+  //   }
+  // );
+  try {
+    const rows = await queryAsync("SELECT first_name, last_name, id FROM employees WHERE role_id = 3");
+    return rows.map((manager) => ({name: `${manager.first_name} ${manager.last_name}`, value: manager.id}));
+  } catch (err) {
+      console.log(`Err at getRoles,`, err);
+  }
 };
