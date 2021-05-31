@@ -25,20 +25,20 @@ let SelectTask = () => {
       type: "list",
       message: "What would you like to do?",
       choices: [
-        "View All Employees",
-        "View All Employees By Department",
-        "View All Employees By Manager",
+        // "View All Employees",
+        // "View All Employees By Department",
+        // "View All Employees By Manager",
         "Add New Employee",
-        "Remove Employee",
-        "Update Employee Role",
-        "Update Employee Manager",
-        "View All Roles",
-        "Add New Role",
-        "Remove Role",
-        "View All Departments",
-        "Add New Department",
-        "Remove Department",
-        "View Total Utilized Budget of Department",
+        // "Remove Employee",
+        // "Update Employee Role",
+        // "Update Employee Manager",
+        // "View All Roles",
+        // "Add New Role",
+        // "Remove Role",
+        // "View All Departments",
+        // "Add New Department",
+        // "Remove Department",
+        // "View Total Utilized Budget of Department",
       ],
     })
     .then((answer) => {
@@ -106,30 +106,31 @@ let SelectTask = () => {
     });
 };
 
-let viewEmployees = () => {
-  const query = `
-  SELECT 
-	e.id, 
-    e.first_name, 
-    e.last_name, 
-    title, 
-	d.name AS department,
-	salary,
-    m.first_name AS manager
-FROM employees e
-LEFT JOIN roles r 
-	ON e.role_id = r.id
-LEFT JOIN employees m
-	ON e.manager_id = m.id
-LEFT JOIN departments d
-	ON r.id = d.id`;
-  connection.query(query, (err, res) => {
-    console.table(res);
-    SelectTask();
-  });
-};
+// let viewEmployees = () => {
+//   const query = `
+//   SELECT 
+// 	e.id, 
+//     e.first_name, 
+//     e.last_name, 
+//     title, 
+// 	d.name AS department,
+// 	salary,
+//     m.first_name AS manager
+// FROM employees e
+// LEFT JOIN roles r 
+// 	ON e.role_id = r.id
+// LEFT JOIN employees m
+// 	ON e.manager_id = m.id
+// LEFT JOIN departments d
+// 	ON r.id = d.id`;
+//   connection.query(query, (err, res) => {
+//     console.table(res);
+//     SelectTask();
+//   });
+// };
 
 let addEmployee = () => {
+  // maybe here is the only place for a query.. So Ill have to make the right one.
   inquirer
   .prompt([
     {
@@ -146,21 +147,7 @@ let addEmployee = () => {
       name: "role",
       type: "list",
       message: "Enter the employee's role:",
-      choices() {
-        connection.query(
-          `SELECT
-            title
-          FROM roles`, 
-          (err, res) => {
-              if (err) throw err;
-            const choiceArray = [];
-            res.forEach(({ title }) => {
-              choiceArray.push(title);
-            });
-            return choiceArray;
-          },
-        );
-      },
+      choices: getRole(),
     },
     {
       name: "manager",
@@ -176,6 +163,7 @@ let addEmployee = () => {
             if (err) throw err;
             const choiceArray = [];
             res.forEach(({ first_name, last_name }) => {
+              // Maybe here filter out repeats..
               choiceArray.push(first_name + " " + last_name);
             });
             return choiceArray;
@@ -215,7 +203,7 @@ const getRoleId = () => {
       return roleId; 
     },
   );
-}
+};
 
 let managerId = () => {
   let manager = answers.manager.split(' ');
@@ -232,4 +220,20 @@ let managerId = () => {
       return managerId;
     },
   );
-}
+};
+
+let getRole = () => {
+  connection.query(
+    `SELECT
+      title
+    FROM roles`, 
+    (err, res) => {
+        if (err) throw err;
+      const choiceArray = [];
+      res.forEach(({ title }) => {
+        choiceArray.push(title);
+      });
+      return choiceArray;
+    },
+  );
+};
