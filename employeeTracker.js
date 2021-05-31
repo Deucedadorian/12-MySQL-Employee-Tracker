@@ -28,20 +28,20 @@ let SelectTask = async () => {
       type: "list",
       message: "What would you like to do?",
       choices: [
-        // "View All Employees",
-        // "View All Employees By Department",
-        // "View All Employees By Manager",
+        "View All Employees",
+        "View All Employees By Department",
+        "View All Employees By Manager",
         "Add New Employee",
-        // "Remove Employee",
-        // "Update Employee Role",
-        // "Update Employee Manager",
-        // "View All Roles",
-        // "Add New Role",
-        // "Remove Role",
-        // "View All Departments",
-        // "Add New Department",
-        // "Remove Department",
-        // "View Total Utilized Budget of Department",
+        "Remove Employee",
+        "Update Employee Role",
+        "Update Employee Manager",
+        "View All Roles",
+        "Add New Role",
+        "Remove Role",
+        "View All Departments",
+        "Add New Department",
+        "Remove Department",
+        "View Total Utilized Budget of Department",
       ],
     })
     .then((answer) => {
@@ -177,55 +177,7 @@ const addEmployee = () => {
     })
 };
 
-// let getRoleId = () => {
-//   connection.query('SELECT id FROM roles WHERE ?', 
-//     {
-//       title: answers.role,
-//     },
-//     (err, res) => {
-//       if (err) throw err;
-//       let roleId = [];
-//       res.forEach(({ id }) => {
-//         roleId.push(id);
-//       });
-//       return roleId; 
-//     },
-//   );
-// };
-
-// let managerId = () => {
-//   let manager = answers.manager.split(' ');
-//   connection.query(
-//     'SELECT id FROM employees WHERE ?',
-//     {
-//       first_name: manager[0],
-//       last_name: manager[1],
-//     },
-//     (err, res) => {
-//       if (err) throw err;
-//       let managerId;
-//         managerId = res.id;
-//       return managerId;
-//     },
-//   );
-// };
-
 let getRoles = async () => {
-  // await connection.query(
-  //   `SELECT
-  //     title
-  //   FROM roles`, 
-  //   (err, res) => {
-  //       if (err) throw err;
-  //       console.log(res);
-  //       const choiceArray = [];
-  //     res.forEach(({ title }) => {
-  //       choiceArray.push(title);
-  //     });
-  //     console.log(choiceArray);
-  //     return choiceArray;
-  //   }
-  // );
   try {
     const rows = await queryAsync("SELECT * FROM roles");
     return rows.map((role) => ({name: role.title, value: role.id}));
@@ -235,22 +187,6 @@ let getRoles = async () => {
 };
 
 let getManagers = async () => {
-  // connection.query(
-  //   `SELECT
-  //     first_name,
-  //     last_name
-  //   FROM employees
-  //   WHERE role_id = 3`, 
-  //   (err, res) => {
-  //     if (err) throw err;
-  //     const choiceArray = [];
-  //     res.forEach(({ first_name, last_name }) => {
-  //       // Maybe here filter out repeats..
-  //       choiceArray.push(first_name + " " + last_name);
-  //     });
-  //     return choiceArray;
-  //   }
-  // );
   try {
     const rows = await queryAsync("SELECT first_name, last_name, id FROM employees WHERE role_id = 3");
     return rows.map((manager) => ({name: `${manager.first_name} ${manager.last_name}`, value: manager.id}));
