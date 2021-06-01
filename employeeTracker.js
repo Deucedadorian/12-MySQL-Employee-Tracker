@@ -20,18 +20,18 @@ let selectTask = () => {
       message: 'What would you like to do?',
       choices: [
         'View All Employees',
-        // 'View All Employees By Department',
-        // 'View All Employees By Manager',
-        // 'View All Roles',
-        // 'View All Departments',
+        'View All Employees by Manager',
+        'View All Roles',
+        'View All Departments',
         'View Total Utilized Budget of Department',
-        // 'Add New Employee',
-        // 'Add New Role',
-        // 'Add New Department',
-        // 'Update Employee',
+        'Add New Employee',
+        'Add New Role',
+        'Add New Department',
+        'Update Employee',
         'Remove Employee',
         'Remove Role',
         'Remove Department',
+        'Exit'
       ],
     })
     .then((answer) => {
@@ -40,11 +40,7 @@ let selectTask = () => {
           viewEmployees();
           break;
 
-        case 'View All Employees By Department':
-          employeeByDepartment();
-          break;
-
-        case 'View All Employees By Manager':
+        case 'View All Employees by Manager':
           employeesByManager();
           break;
 
@@ -88,6 +84,9 @@ let selectTask = () => {
           departmentBudget();
           break;
 
+        case 'Exit':
+          break;
+
         default:
           console.log(`Invalid action: ${answer.action}`);
           break;
@@ -120,6 +119,35 @@ LEFT JOIN departments d
   });
 };
 
+let departmentBudget = async () => {
+  const departments = await getDepartments();
+  const answers = await inquirer.prompt([
+    {
+      name: 'department',
+      type: 'list',
+      message: 'Enter the manager you\'d like to search by:',
+      choices: departments,
+    }
+  ])
+  await connection.query(`
+  SELECT SUM(salary) as total_utilized_budget,
+    d.name AS department
+    FROM employees e
+  LEFT JOIN roles r 
+    ON e.role_id = r.id
+  LEFT JOIN departments d
+    ON r.id = d.id
+    WHERE ?`,
+    {
+      department_id: Number(answers.department),
+    },
+    (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    selectTask();
+  });
+};
+
 let viewDepartments = () => {
   connection.query(`SELECT name AS Departments FROM departments;`,
   (err, res) => {
@@ -137,6 +165,41 @@ let viewRoles = () => {
     selectTask();
   });
 } 
+
+// View by manager
+let employeesByManager = async () => {
+  const managers = await getManagers();
+  const answers = await inquirer.prompt([
+    {
+      name: 'manager',
+      type: 'list',
+      message: 'Enter the manager you\'d like to search by:',
+      choices: managers,
+    }
+  ])
+  await connection.query(` 
+  SELECT 
+    e.id, 
+    e.first_name, 
+    e.last_name, 
+    title, 
+    d.name AS department,
+    salary
+  FROM employees e
+  LEFT JOIN roles r 
+    ON e.role_id = r.id
+  LEFT JOIN departments d
+    ON r.id = d.id
+  WHERE ?`,
+  {
+    manager_id: answers.manager,
+  },
+  (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    selectTask();
+  });
+}
 
 // add Departments, Roles and Employees
 let addEmployee = () => {
@@ -364,4 +427,75 @@ let getEmployees = async () => {
   } catch (err) {
     console.log('Err at getEmployees');
   }
+}
+
+// Remove Employee 
+let removeEmployee = async () => {
+  const employees = await getEmployees();
+  const answers = await inquirer.prompt([
+    {
+      name: 'employee',
+      type: 'list',
+      message: 'Which Employee would you like to delete?',
+      choices: employees,
+    }
+  ])
+  await connection.query(` 
+  DELETE FROM employees
+  WHERE ?`,
+  {
+    id: Number(answers.employee),
+  },
+  (err) => {
+    if (err) throw err;
+    selectTask();
+  });
+}
+
+// remove roles
+let removeRole = async () => {
+  const roles = await getRoles();
+  const answers = await inquirer.prompt([
+    {
+      name: 'role',
+      type: 'list',
+      message: 'Which role would you like to delete?',
+      choices: roles,
+    }
+  ])
+  await connection.query(` 
+  DELETE FROM roles
+  WHERE ?`,
+  {
+    id: Number(answers.role),
+  },
+  (err) => {
+    if (err) throw err;
+    selectTask();
+  });
+}
+
+// remove department
+let removeDepartment = async () => {
+  const departments = await getDepartments();
+  const answers = await inquirer.prompt([
+    {
+      name: 'department',
+      type: 'list',
+      message: 'Which department would you like to delete?',
+      choices: departments,
+    }
+  ])
+  console.log('made it this far');
+  await connection.query(`
+    DELETE FROM departments
+    WHERE ?`,
+      {
+        id: Number(answers.department),
+      },
+    (err) => {
+      if (err) throw err;
+      selectTask();
+    }
+  );
 }
