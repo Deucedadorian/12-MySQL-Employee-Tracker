@@ -1,4 +1,5 @@
 const mysql = require("mysql");
+const { promisify } = require('util');
 
 const connection = mysql.createConnection({
     host: "localhost",
@@ -10,4 +11,6 @@ const connection = mysql.createConnection({
     database: "businessDB",
   });
 
-  module.exports = { connection } 
+  const queryPromise = promisify(connection.query.bind(connection))
+
+  module.exports = { connection, queryPromise }
