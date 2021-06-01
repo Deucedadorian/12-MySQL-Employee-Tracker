@@ -1,7 +1,8 @@
 const util = require('util');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
-const { connection, queryPromise } = require('./connection');
+const { promisify } = require('util');
+const { connection } = require('./connection');
 const { type } = require('os');
 
 const queryAsync = util.promisify(connection.query).bind(connection);
@@ -94,7 +95,7 @@ let selectTask = () => {
 };
 
 // View Departments, Roles and Employees
-let viewEmployees = async () => {
+let viewEmployees = (selectTask) => {
   const query = `
   SELECT 
     e.id, 
@@ -111,8 +112,11 @@ LEFT JOIN employees m
     ON e.manager_id = m.id
 LEFT JOIN departments d
     ON r.id = d.id`;
-  const res = await connection.query(query)
-  console.table(res);
+  connection.query(query, (err, res) => {
+    if (err) throw err;
+    console.table(res);
+    selectTask();
+  });
 };
 
 let departmentBudget = async () => {
